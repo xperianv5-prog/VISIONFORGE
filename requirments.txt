@@ -1,0 +1,8 @@
+litellm>=1.40.0
+mcp>=1.0.0
+gradio>=4.0.0
+trimesh>=4.0.0
+numpy
+pillow
+requests
+duckduckgo-search
