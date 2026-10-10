@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VisionForge — Vision-to-3D Production AI Agent · Complete Guide</title>
+<style>
+:root{--bg:#0b0e14;--panel:#121722;--panel2:#171d2b;--text:#e6e9f0;--muted:#8b93a7;--accent:#5eead4;--accent2:#a78bfa;--border:#232b3d;--code:#0d1117;--ok:#34d399;--warn:#fbbf24}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+a{color:var(--accent)}
+.layout{display:grid;grid-template-columns:270px 1fr;min-height:100vh}
+nav{position:sticky;top:0;height:100vh;overflow:auto;background:var(--panel);border-right:1px solid var(--border);padding:22px 16px}
+nav h1{font-size:18px;margin:0 0 4px;color:#fff}
+nav .sub{color:var(--muted);font-size:12px;margin-bottom:18px}
+nav a{display:block;color:var(--text);text-decoration:none;padding:7px 10px;border-radius:8px;font-size:14px;margin:2px 0}
+nav a:hover,nav a.active{background:var(--panel2);color:var(--accent)}
+nav .grp{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin:16px 10px 6px}
+main{padding:32px 44px;max-width:1200px}
+section{margin-bottom:64px;scroll-margin-top:20px}
+h2{font-size:26px;border-bottom:1px solid var(--border);padding-bottom:10px;margin:0 0 18px}
+h3{font-size:18px;margin:28px 0 10px;color:var(--accent2)}
+p,li{color:#c9cfdc}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin:14px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;margin-right:6px}
+.b-draft{background:#3b2f14;color:var(--warn)}.b-static{background:#0f2f2a;color:var(--ok)}.b-rig{background:#241c44;color:var(--accent2)}.b-anim{background:#0f2a3b;color:#38bdf8}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0}
+.steps li{counter-increment:s;position:relative;padding:12px 0 12px 54px;border-left:2px solid var(--border);margin-left:18px}
+.steps li::before{content:counter(s);position:absolute;left:-19px;top:12px;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b0e14;font-weight:700;display:flex;align-items:center;justify-content:center}
+details{background:var(--panel);border:1px solid var(--border);border-radius:12px;margin:14px 0;overflow:hidden}
+summary{cursor:pointer;padding:14px 18px;font-weight:600;background:var(--panel2);list-style:none;display:flex;justify-content:space-between;align-items:center}
+summary::after{content:"▾";color:var(--muted)}
+details[open] summary::after{content:"▴"}
+summary .file{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--accent);font-size:13px}
+.codewrap{position:relative}
+pre{margin:0;background:var(--code);padding:18px;overflow:auto;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#d6deeb;max-height:720px;tab-size:4}
+.copy{position:absolute;top:10px;right:12px;background:#1f2937;color:#e5e7eb;border:1px solid #374151;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+.copy:hover{background:#374151}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.flow span{background:var(--panel2);border:1px solid var(--border);padding:8px 12px;border-radius:8px;font-size:13px}
+.flow i{color:var(--muted);font-style:normal}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{border:1px solid var(--border);padding:8px 10px;text-align:left}
+th{background:var(--panel2)}
+.tabs{display:flex;gap:6px;margin:10px 0}
+.tabs button{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;cursor:pointer}
+.tabs button.active{background:var(--accent);color:#0b0e14;font-weight:600}
+.tab{display:none}.tab.active{display:block}
+@media (max-width:900px){.layout{grid-template-columns:1fr}nav{position:relative;height:auto}main{padding:20px}}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+<h1>VisionForge</h1>
+<div class="sub">Vision-to-3D Production AI Agent · v1.0</div>
+<div class="grp">Overview</div>
+<a href="#arch">Architecture</a>
+<a href="#labels">Delivery Labels</a>
+<div class="grp">Code Modules</div>
+<a href="#router">1 · router.py</a>
+<a href="#memory">2 · memory.py</a>
+<a href="#pipeline">3 · pipeline.py (Blender)</a>
+<a href="#server">4 · server.py (MCP)</a>
+<a href="#app">5 · app.py (Gradio)</a>
+<a href="#support">Support files</a>
+<div class="grp">Setup &amp; Run</div>
+<a href="#install">6 · Installation</a>
+<a href="#blender-setup">Blender setup</a>
+<a href="#claude">Claude Desktop</a>
+<a href="#run">Headless vs Web UI</a>
+</nav>
+<main>
+
+<section id="arch">
+<h2>Architecture</h2>
+<p>VisionForge turns one or more reference photos (plus an optional text brief) into a packed, QA-verified <code>.blend</code> file containing a QuadriFlow-remeshed, UV-unwrapped, 4K-PBR-baked asset. An LLM agent orchestrates the stages; everything heavy (segmentation, 3D reconstruction, Blender baking) runs locally as subprocesses so a provider outage never corrupts a job.</p>
+<div class="flow">
+<span>Images + prompt</span><i>→</i><span>System 1 fast router</span><i>→</i><span>reference_search</span><i>→</i><span>preprocess (RMBG)</span><i>→</i><span>reconstruct (Trellis / TripoSR / InstantMesh)</span><i>→</i><span>blender_stage (QuadriFlow · UV · 4K bake · pack)</span><i>→</i><span>qa_run (turntable · SSIM/LPIPS/IoU)</span><i>→</i><span>package_verify</span><i>→</i><span>memory_record</span>
+</div>
+<div class="grid">
+<div class="card"><b>System 1 — Fast Router</b><p>Deterministic rules decide most things for zero tokens. Gray-zone cases call a 1-token classifier (<code>max_tokens=1</code>, single-letter answer).</p></div>
+<div class="card"><b>System 2 — Reasoning</b><p>Only ambiguous geometry (e.g. "a bottle or a vase?") escalates to a deep reasoning model with episodic few-shot examples pulled from SQLite.</p></div>
+<div class="card"><b>LiteLLM Cascade</b><p>Primary → Gemini Flash → Groq Llama → Groq DeepSeek → OpenRouter free. 429/quota errors are intercepted, the tier is cooled down, scratchpad state is preserved and the call is re-issued transparently.</p></div>
+<div class="card"><b>Headless Blender</b><p>One script for Blender 3.6 and 4.x. Socket aliasing handles the redesigned Principled BSDF. Packing is re-verified by a fresh background Blender process.</p></div>
+</div>
+<h3>Repository layout</h3>
+<div class="codewrap"><pre>visionforge/
+├── router.py        # System1/System2 + LiteLLM failover
+├── memory.py        # SQLite episodic memory
+├── pipeline.py      # runs INSIDE Blender (-b --python)
+├── server.py        # FastMCP server + orchestration
+├── app.py           # Gradio web UI
+├── requirements.txt
+├── .env.example
+├── jobs/            # per-job folders (auto-created)
+└── visionforge_memory.db (auto-created)</pre></div>
+</section>
+
+<section id="labels">
+<h2>Delivery Labels</h2>
+<table>
+<tr><th>Label</th><th>Criteria (all must hold)</th><th>Meaning</th></tr>
+<tr><td><span class="badge b-draft">DRAFT</span></td><td>Any stage failed, QA below threshold, or images not fully packed.</td><td>Usable preview only.</td></tr>
+<tr><td><span class="badge b-static">STATIC_READY</span></td><td>QA pass · all textures packed · grounded at origin · metric scale.</td><td>Ship as a prop / static asset.</td></tr>
+<tr><td><span class="badge b-rig">RIG_READY_CANDIDATE</span></td><td>STATIC_READY · quad ratio ≥ 0.95 · 0 non-manifold edges · pole ratio &lt; 3% · symmetric remesh.</td><td>Topology suitable for rigging; human review advised.</td></tr>
+<tr><td><span class="badge b-anim">ANIMATION_READY</span></td><td>RIG_READY_CANDIDATE · job requested animation · QA score ≥ 0.80 · edge-loop continuity check passed.</td><td>Cleared for rig &amp; deform.</td></tr>
+</table>
+</section>
+
+<section id="router">
+<h2>1 · Dynamic Routing &amp; LiteLLM Failover — <code>router.py</code></h2>
+<p>Exports <code>Router</code> (singleton <code>ROUTER</code>) with: <code>needs_web_search()</code>, <code>pick_backend()</code>, <code>qa_verdict()</code>, <code>classify_object()</code>, <code>fast_decide()</code>, <code>reason()</code>, <code>complete()</code>; plus <code>compress_json()</code>, <code>prune_messages()</code> and a persisted <code>RouterState</code>.</p>
+<details open><summary>router.py <span class="file">visionforge/router.py</span></summary>
+<div class="codewrap"><pre><code>"""VisionForge router: System 1 (fast, deterministic + 1-token classifier) and
+System 2 (deep reasoning) with an automatic LiteLLM provider cascade."""
+import os
+import re
+import json
+import time
+import logging
+from dataclasses import dataclass, field, asdict
+from typing import Any, Dict, List, Optional
+
+import litellm
+
+log = logging.getLogger("visionforge.router")
+litellm.drop_params = True
+litellm.suppress_debug_info = True
+
+# --------------------------------------------------------------------------- #
+# Provider cascade                                                            #
+# --------------------------------------------------------------------------- #
+FAST_CASCADE = [
+    {"tier": "primary", "model": os.getenv("VF_PRIMARY_MODEL", "anthropic/claude-3-5-haiku-20241022"),
+     "key_env": os.getenv("VF_PRIMARY_KEY_ENV", "ANTHROPIC_API_KEY")},
+    {"tier": "gemini_flash", "model": os.getenv("VF_GEMINI_FLASH", "gemini/gemini-2.0-flash"), "key_env": "GEMINI_API_KEY"},
+    {"tier": "groq_llama", "model": os.getenv("VF_GROQ_LLAMA", "groq/llama-3.3-70b-versatile"), "key_env": "GROQ_API_KEY"},
+    {"tier": "groq_deepseek", "model": os.getenv("VF_GROQ_DEEPSEEK", "groq/deepseek-r1-distill-llama-70b"), "key_env": "GROQ_API_KEY"},
+    {"tier": "openrouter_free", "model": os.getenv("VF_OPENROUTER_FREE", "openrouter/meta-llama/llama-3.3-70b-instruct:free"),
+     "key_env": "OPENROUTER_API_KEY"},
+]
+
+REASONING_CASCADE = [
+    {"tier": "primary_reasoning", "model": os.getenv("VF_REASONING_MODEL", "anthropic/claude-sonnet-4-20250514"),
+     "key_env": os.getenv("VF_PRIMARY_KEY_ENV", "ANTHROPIC_API_KEY")},
+    {"tier": "gemini_pro", "model": os.getenv("VF_GEMINI_PRO", "gemini/gemini-2.5-pro"), "key_env": "GEMINI_API_KEY"},
+    {"tier": "groq_deepseek", "model": os.getenv("VF_GROQ_DEEPSEEK", "groq/deepseek-r1-distill-llama-70b"), "key_env": "GROQ_API_KEY"},
+    {"tier": "openrouter_r1", "model": os.getenv("VF_OPENROUTER_R1", "openrouter/deepseek/deepseek-r1:free"), "key_env": "OPENROUTER_API_KEY"},
+]
+
+RATE_LIMIT_PATTERN = re.compile(r"429|rate.?limit|quota|resource.?exhausted|too many requests|overloaded", re.I)
+COOLDOWN_SECONDS = float(os.getenv("VF_PROVIDER_COOLDOWN", "90"))
+STATE_PATH = os.getenv("VF_ROUTER_STATE", os.path.join(os.path.dirname(os.path.abspath(__file__)), "router_state.json"))
+
+# --------------------------------------------------------------------------- #
+# Token helpers                                                               #
+# --------------------------------------------------------------------------- #
+def compress_json(obj: Any) -&gt; str:
+    """Minified JSON payload (no whitespace) to save prompt tokens."""
+    return json.dumps(obj, separators=(",", ":"), ensure_ascii=False, default=str)
+
+
+def estimate_tokens(text: str, model: str = "gpt-4o") -&gt; int:
+    try:
+        return int(litellm.token_counter(model=model, text=text))
+    except Exception:
+        return max(1, len(text) // 4)
+
+
+def prune_messages(messages: List[Dict[str, str]], max_tokens: int = 6000) -&gt; List[Dict[str, str]]:
+    """Sliding-window pruning: keep system messages + most recent turns within budget."""
+    system = [m for m in messages if m.get("role") == "system"]
+    others = [m for m in messages if m.get("role") != "system"]
+    budget = max_tokens - sum(estimate_tokens(m.get("content", "")) for m in system)
+    kept: List[Dict[str, str]] = []
+    for m in reversed(others):
+        cost = estimate_tokens(m.get("content", ""))
+        if cost &gt; budget and kept:
+            break
+        if cost &gt; budget:
+            content = m.get("content", "")
+            m = {"role": m["role"], "content": content[-(budget * 4):]}
+            cost = budget
+        kept.insert(0, m)
+        budget -= cost
+        if budget &lt;= 0:
+            break
+    return system + kept
+
+
+# --------------------------------------------------------------------------- #
+# Router state (scratchpad preserved across provider switches)                #
+# --------------------------------------------------------------------------- #
+@dataclass
+class RouterState:
+    active_provider: str = "none"
+    active_model: str = "none"
+    scratchpad: List[Dict[str, Any]] = field(default_factory=list)
+    cooldowns: Dict[str, float] = field(default_factory=dict)
+    dead_tiers: List[str] = field(default_factory=list)
+    metrics: Dict[str, Any] = field(default_factory=lambda: {
+        "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0,
+        "calls": 0, "fast_calls": 0, "reasoning_calls": 0, "failovers": 0,
+        "rule_decisions": 0, "per_provider": {}})
+
+    def note(self, kind: str, payload: Any) -&gt; None:
+        self.scratchpad.append({"t": time.time(), "kind": kind, "data": payload})
+        if len(self.scratchpad) &gt; 200:
+            self.scratchpad = self.scratchpad[-200:]
+
+    def save(self, path: str = STATE_PATH) -&gt; None:
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(asdict(self), f, indent=1)
+        except OSError as exc:
+            log.warning("state save failed: %s", exc)
+
+    @classmethod
+    def load(cls, path: str = STATE_PATH) -&gt; "RouterState":
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                st = cls()
+                for k, v in data.items():
+                    if hasattr(st, k):
+                        setattr(st, k, v)
+                return st
+            except (OSError, json.JSONDecodeError):
+                pass
+        return cls()
+
+
+class ProvidersExhausted(RuntimeError):
+    pass
+
+
+# --------------------------------------------------------------------------- #
+# Router                                                                      #
+# --------------------------------------------------------------------------- #
+SEARCH_TRIGGERS = re.compile(
+    r"\b(real|actual|exact|official|blueprint|schematic|spec|specs|specification|dimension|dimensions|"
+    r"height|width|length|scale|size|measurement|cm|mm|inch|inches|feet|meters?|brand|model number|"
+    r"true to life|accurate|reference)\b", re.I)
+AMBIGUITY_TRIGGERS = re.compile(r"\b(or|maybe|either|unsure|not sure|could be|something like|ish)\b|\?", re.I)
+RIG_TRIGGERS = re.compile(r"\b(rig|rigged|animate|animation|animated|character|creature|humanoid|deform|skeleton|armature)\b", re.I)
+
+BACKENDS = {
+    "trellis": {"min_vram_gb": 16, "multi_image": True, "quality": 3},
+    "instantmesh": {"min_vram_gb": 10, "multi_image": True, "quality": 2},
+    "triposr": {"min_vram_gb": 4, "multi_image": False, "quality": 1},
+}
+
+
+class Router:
+    def __init__(self) -&gt; None:
+        self.state = RouterState.load()
+
+    # ---------------- deterministic rules (0 tokens) -----------------------
+    def needs_web_search(self, prompt: str, object_class: str = "") -&gt; bool:
+        text = f"{prompt} {object_class}"
+        hit = bool(SEARCH_TRIGGERS.search(text))
+        self.state.metrics["rule_decisions"] += 1
+        self.state.note("rule.web_search", {"hit": hit})
+        return hit
+
+    def is_rig_request(self, prompt: str) -&gt; bool:
+        return bool(RIG_TRIGGERS.search(prompt or ""))
+
+    def pick_backend(self, n_images: int, has_gpu: bool, vram_gb: float, available: List[str]) -&gt; str:
+        self.state.metrics["rule_decisions"] += 1
+        ranked = sorted([b for b in available if b in BACKENDS], key=lambda b: -BACKENDS[b]["quality"])
+        for b in ranked:
+            spec = BACKENDS[b]
+            if n_images &gt; 1 and not spec["multi_image"]:
+                continue
+            if has_gpu and vram_gb &gt;= spec["min_vram_gb"]:
+                return b
+        for b in ranked:
+            if n_images == 1 or BACKENDS[b]["multi_image"]:
+                return b
+        return ranked[-1] if ranked else "triposr"
+
+    def qa_verdict(self, score: float, pass_threshold: float = 0.72, gray_zone: float = 0.05,
+                   context: Optional[Dict[str, Any]] = None) -&gt; Dict[str, Any]:
+        """Deterministic pass/fail; the 1-token classifier only breaks ties in the gray zone."""
+        self.state.metrics["rule_decisions"] += 1
+        if score &gt;= pass_threshold + gray_zone:
+            return {"pass": True, "method": "rule", "score": score}
+        if score &lt; pass_threshold - gray_zone:
+            return {"pass": False, "method": "rule", "score": score}
+        ctx = compress_json(context or {})
+        answer = self.fast_decide(
+            f"3D asset QA. similarity={score:.3f} threshold={pass_threshold}. ctx={ctx}. "
+            f"Is the reconstruction acceptable for delivery? Answer P (pass) or F (fail).",
+            options=["P", "F"], default="F")
+        return {"pass": answer == "P", "method": "fast_llm", "score": score}
+
+    # ---------------- System 1: 1-token classifier -------------------------
+    def fast_decide(self, question: str, options: List[str], default: str) -&gt; str:
+        messages = [
+            {"role": "system", "content": "You are a classifier. Reply with exactly one character from the allowed set. No words."},
+            {"role": "user", "content": f"{question}\nAllowed: {''.join(options)}"},
+        ]
+        try:
+            res = self.complete(messages, cascade=FAST_CASCADE, max_tokens=1, temperature=0.0, purpose="fast")
+            token = (res["content"] or "").strip().upper()[:1]
+            return token if token in options else default
+        except ProvidersExhausted:
+            return default
+
+    def classify_object(self, prompt: str, caption: str = "", few_shot: str = "") -&gt; Dict[str, Any]:
+        """Returns object_class, ambiguity flag and remesh hints. Escalates to System 2 only if ambiguous."""
+        text = f"{prompt} {caption}".strip()
+        ambiguous_rule = bool(AMBIGUITY_TRIGGERS.search(text)) or len(text.split()) &lt; 2
+        if not ambiguous_rule:
+            words = re.findall(r"[a-zA-Z]+", prompt.lower())
+            noun = words[-1] if words else "object"
+            verdict = self.fast_decide(
+                f"Is '{text[:300]}' a clear, single, unambiguous physical object description? Y or N.",
+                options=["Y", "N"], default="N")
+            if verdict == "Y":
+                out = {"object_class": noun, "ambiguous": False, "system": 1,
+                       "animation_candidate": self.is_rig_request(prompt), "notes": "fast path"}
+                self.state.note("classify", out)
+                return out
+        reasoning = self.reason(
+            "Classify the object for 3D reconstruction. Return compact JSON with keys: "
+            "object_class (snake_case noun), ambiguous (bool), symmetric (bool), animation_candidate (bool), "
+            "suggested_target_faces (int 2000-60000), notes (short string).",
+            f"description={compress_json(text)} few_shot_examples={few_shot or 'none'}")
+        parsed = self._extract_json(reasoning.get("content", "")) or {}
+        out = {
+            "object_class": str(parsed.get("object_class", "object")).lower().replace(" ", "_"),
+            "ambiguous": bool(parsed.get("ambiguous", True)),
+            "symmetric": bool(parsed.get("symmetric", True)),
+            "animation_candidate": bool(parsed.get("animation_candidate", self.is_rig_request(prompt))),
+            "suggested_target_faces": int(parsed.get("suggested_target_faces", 12000)),
+            "notes": str(parsed.get("notes", "")),
+            "system": 2,
+        }
+        self.state.note("classify", out)
+        return out
+
+    # ---------------- System 2: reasoning ----------------------------------
+    def reason(self, instruction: str, payload: str, max_tokens: int = 600) -&gt; Dict[str, Any]:
+        messages = prune_messages([
+            {"role": "system", "content": "You are a senior technical 3D director. Think carefully, answer concisely in JSON."},
+            {"role": "user", "content": f"{instruction}\n{payload}"},
+        ])
+        return self.complete(messages, cascade=REASONING_CASCADE, max_tokens=max_tokens, temperature=0.2, purpose="reasoning")
+
+    # ---------------- cascade engine ---------------------------------------
+    def _tier_available(self, tier: Dict[str, str]) -&gt; bool:
+        if tier["tier"] in self.state.dead_tiers:
+            return False
+        if not os.getenv(tier["key_env"]):
+            return False
+        until = self.state.cooldowns.get(tier["tier"], 0.0)
+        return time.time() &gt;= until
+
+    def complete(self, messages: List[Dict[str, str]], cascade: List[Dict[str, str]],
+                 max_tokens: int = 256, temperature: float = 0.0, purpose: str = "fast") -&gt; Dict[str, Any]:
+        errors: List[str] = []
+        for tier in cascade:
+            if not self._tier_available(tier):
+                continue
+            try:
+                t0 = time.time()
+                resp = litellm.completion(model=tier["model"], messages=messages, max_tokens=max_tokens,
+                                          temperature=temperature, timeout=60)
+                content = resp.choices[0].message.content or ""
+                usage = getattr(resp, "usage", None)
+                p = int(getattr(usage, "prompt_tokens", 0) or 0)
+                c = int(getattr(usage, "completion_tokens", 0) or 0)
+                self._record_usage(tier, p, c, purpose, time.time() - t0)
+                return {"content": content, "model": tier["model"], "tier": tier["tier"],
+                        "usage": {"prompt_tokens": p, "completion_tokens": c}}
+            except Exception as exc:  # noqa: BLE001 - we must classify every provider error
+                msg = f"{tier['tier']}: {type(exc).__name__}: {str(exc)[:160]}"
+                errors.append(msg)
+                if isinstance(exc, litellm.exceptions.AuthenticationError):
+                    self.state.dead_tiers.append(tier["tier"])
+                    log.error("auth failed, tier disabled: %s", msg)
+                elif isinstance(exc, litellm.exceptions.RateLimitError) or RATE_LIMIT_PATTERN.search(str(exc)):
+                    self.state.cooldowns[tier["tier"]] = time.time() + COOLDOWN_SECONDS
+                    self.state.metrics["failovers"] += 1
+                    log.warning("rate limit intercepted, failing over: %s", msg)
+                else:
+                    self.state.cooldowns[tier["tier"]] = time.time() + 20
+                    self.state.metrics["failovers"] += 1
+                    log.warning("provider error, failing over: %s", msg)
+                self.state.note("failover", {"from": tier["tier"], "error": msg})
+                self.state.save()
+        raise ProvidersExhausted("All providers failed or cooling down: " + " | ".join(errors))
+
+    def _record_usage(self, tier: Dict[str, str], p: int, c: int, purpose: str, latency: float) -&gt; None:
+        m = self.state.metrics
+        m["prompt_tokens"] += p
+        m["completion_tokens"] += c
+        m["total_tokens"] += p + c
+        m["calls"] += 1
+        m["fast_calls" if purpose == "fast" else "reasoning_calls"] += 1
+        pp = m["per_provider"].setdefault(tier["tier"], {"calls": 0, "tokens": 0, "latency_s": 0.0})
+        pp["calls"] += 1
+        pp["tokens"] += p + c
+        pp["latency_s"] = round(pp["latency_s"] + latency, 3)
+        self.state.active_provider = tier["tier"]
+        self.state.active_model = tier["model"]
+        self.state.save()
+
+    @staticmethod
+    def _extract_json(text: str) -&gt; Optional[Dict[str, Any]]:
+        text = re.sub(r"&lt;think&gt;.*?&lt;/think&gt;", "", text, flags=re.S)
+        match = re.search(r"\{.*\}", text, re.S)
+        if not match:
+            return None
+        try:
+            return json.loads(match.group(0))
+        except json.JSONDecodeError:
+            return None
+
+    def telemetry(self) -&gt; Dict[str, Any]:
+        return {"provider": self.state.active_provider, "model": self.state.active_model, **self.state.metrics}
+
+
+ROUTER = Router()
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    r = ROUTER
+    print("web search:", r.needs_web_search("a 1:1 scale Leica M6 camera with exact dimensions"))
+    print("backend:", r.pick_backend(1, True, 24, ["trellis", "triposr", "instantmesh"]))
+    print("qa:", r.qa_verdict(0.9))
+    print(compress_json(r.telemetry()))
+</code></pre></div>
+</details>
+</section>
+
+<section id="memory">
+<h2>2 · Episodic Memory &amp; Continuous Learning — <code>memory.py</code></h2>
+<p>A single SQLite table stores every run. <code>recommend()</code> performs few-shot episodic retrieval: it finds past successful runs of the same object class (falling back to global successes) and returns the median QuadriFlow density, the most common bake resolution and the median cage extrusion that produced passing QA.</p>
+<details open><summary>memory.py <span class="file">visionforge/memory.py</span></summary>
+<div class="codewrap"><pre><code>"""VisionForge episodic memory (SQLite)."""
+import os
+import json
+import sqlite3
+import statistics
+import time
+from collections import Counter
+from contextlib import contextmanager
+from typing import Any, Dict, List, Optional
+
+DB_PATH = os.getenv("VF_MEMORY_DB", os.path.join(os.path.dirname(os.path.abspath(__file__)), "visionforge_memory.db"))
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at REAL NOT NULL,
+    job_id TEXT,
+    input_hash TEXT NOT NULL,
+    object_class TEXT NOT NULL,
+    backend TEXT,
+    target_faces INTEGER,
+    quad_ratio REAL,
+    non_manifold_edges INTEGER,
+    bake_resolution INTEGER,
+    bake_maps TEXT,
+    cage_extrusion REAL,
+    ssim REAL,
+    lpips REAL,
+    silhouette_iou REAL,
+    qa_score REAL,
+    qa_pass INTEGER,
+    packed_ok INTEGER,
+    label TEXT,
+    prompt_tokens INTEGER,
+    completion_tokens INTEGER,
+    provider TEXT,
+    duration_s REAL,
+    notes TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_runs_class ON runs(object_class);
+CREATE INDEX IF NOT EXISTS idx_runs_hash ON runs(input_hash);
+"""
+
+DEFAULTS = {"target_faces": 12000, "bake_resolution": 4096, "cage_extrusion": 0.02, "backend": "triposr"}
+
+
+@contextmanager
+def _conn(path: str = DB_PATH):
+    con = sqlite3.connect(path)
+    con.row_factory = sqlite3.Row
+    try:
+        yield con
+        con.commit()
+    finally:
+        con.close()
+
+
+def init_db(path: str = DB_PATH) -&gt; None:
+    with _conn(path) as con:
+        con.executescript(SCHEMA)
+
+
+def record_run(rec: Dict[str, Any], path: str = DB_PATH) -&gt; int:
+    init_db(path)
+    cols = ["job_id", "input_hash", "object_class", "backend", "target_faces", "quad_ratio", "non_manifold_edges",
+            "bake_resolution", "bake_maps", "cage_extrusion", "ssim", "lpips", "silhouette_iou", "qa_score",
+            "qa_pass", "packed_ok", "label", "prompt_tokens", "completion_tokens", "provider", "duration_s", "notes"]
+    row = {c: rec.get(c) for c in cols}
+    if isinstance(row["bake_maps"], (list, tuple)):
+        row["bake_maps"] = json.dumps(list(row["bake_maps"]))
+    row["qa_pass"] = int(bool(row["qa_pass"])) if row["qa_pass"] is not None else None
+    row["packed_ok"] = int(bool(row["packed_ok"])) if row["packed_ok"] is not None else None
+    row["input_hash"] = row["input_hash"] or "unknown"
+    row["object_class"] = (row["object_class"] or "object").lower()
+    with _conn(path) as con:
+        cur = con.execute(
+            f"INSERT INTO runs (created_at,{','.join(cols)}) VALUES (?,{','.join('?' for _ in cols)})",
+            [time.time()] + [row[c] for c in cols])
+        return int(cur.lastrowid)
+
+
+def query_runs(object_class: Optional[str] = None, input_hash: Optional[str] = None, only_success: bool = False,
+               limit: int = 10, path: str = DB_PATH) -&gt; List[Dict[str, Any]]:
+    init_db(path)
+    sql = "SELECT * FROM runs WHERE 1=1"
+    args: List[Any] = []
+    if object_class:
+        sql += " AND object_class = ?"
+        args.append(object_class.lower())
+    if input_hash:
+        sql += " AND input_hash = ?"
+        args.append(input_hash)
+    if only_success:
+        sql += " AND qa_pass = 1 AND packed_ok = 1"
+    sql += " ORDER BY created_at DESC LIMIT ?"
+    args.append(limit)
+    with _conn(path) as con:
+        return [dict(r) for r in con.execute(sql, args).fetchall()]
+
+
+def recommend(object_class: str, animation_candidate: bool = False, path: str = DB_PATH) -&gt; Dict[str, Any]:
+    """Few-shot episodic retrieval: derive optimal remesh/bake settings from successful past runs."""
+    runs = query_runs(object_class=object_class, only_success=True, limit=25, path=path)
+    source = "class"
+    if len(runs) &lt; 2:
+        runs = query_runs(only_success=True, limit=50, path=path)
+        source = "global" if runs else "defaults"
+    rec = dict(DEFAULTS)
+    rec["source"] = source
+    rec["examples"] = len(runs)
+    if runs:
+        faces = [r["target_faces"] for r in runs if r["target_faces"]]
+        res = [r["bake_resolution"] for r in runs if r["bake_resolution"]]
+        cages = [r["cage_extrusion"] for r in runs if r["cage_extrusion"]]
+        backends = [r["backend"] for r in runs if r["backend"]]
+        if faces:
+            rec["target_faces"] = int(statistics.median(faces))
+        if res:
+            rec["bake_resolution"] = Counter(res).most_common(1)[0][0]
+        if cages:
+            rec["cage_extrusion"] = round(float(statistics.median(cages)), 4)
+        if backends:
+            rec["backend"] = Counter(backends).most_common(1)[0][0]
+    if animation_candidate:
+        rec["target_faces"] = max(rec["target_faces"], 20000)
+        rec["use_mesh_symmetry"] = True
+    else:
+        rec["use_mesh_symmetry"] = False
+    rec["target_faces"] = int(min(max(rec["target_faces"], 2000), 80000))
+    return rec
+
+
+def few_shot_examples(object_class: str, k: int = 3, path: str = DB_PATH) -&gt; str:
+    """Compact text block of past successful runs for System 2 prompts."""
+    runs = query_runs(object_class=object_class, only_success=True, limit=k, path=path)
+    if not runs:
+        runs = query_runs(only_success=True, limit=k, path=path)
+    lines = []
+    for r in runs:
+        lines.append(f"{r['object_class']}:faces={r['target_faces']},quad={r['quad_ratio']},res={r['bake_resolution']},"
+                     f"qa={r['qa_score']},label={r['label']}")
+    return ";".join(lines)
+
+
+def stats(path: str = DB_PATH) -&gt; Dict[str, Any]:
+    init_db(path)
+    with _conn(path) as con:
+        total = con.execute("SELECT COUNT(*) c FROM runs").fetchone()["c"]
+        passed = con.execute("SELECT COUNT(*) c FROM runs WHERE qa_pass=1").fetchone()["c"]
+        tokens = con.execute("SELECT COALESCE(SUM(prompt_tokens),0) p, COALESCE(SUM(completion_tokens),0) c FROM runs").fetchone()
+        labels = con.execute("SELECT label, COUNT(*) c FROM runs GROUP BY label").fetchall()
+    return {"runs": total, "qa_passed": passed, "prompt_tokens": tokens["p"], "completion_tokens": tokens["c"],
+            "labels": {r["label"]: r["c"] for r in labels}}
+
+
+if __name__ == "__main__":
+    init_db()
+    rid = record_run({"job_id": "demo", "input_hash": "abc", "object_class": "chair", "backend": "triposr",
+                      "target_faces": 15000, "quad_ratio": 0.97, "bake_resolution": 4096, "cage_extrusion": 0.02,
+                      "ssim": 0.81, "qa_score": 0.84, "qa_pass": True, "packed_ok": True, "label": "STATIC_READY"})
+    print("inserted", rid)
+    print(recommend("chair"))
+    print(stats())
+</code></pre></div>
+</details>
+</section>
+
+<section id="pipeline">
+<h2>3 · Headless Blender Automation Engine — <code>pipeline.py</code></h2>
+<p>Run as <code>blender -b --python pipeline.py -- --job job.json</code>. Works on 3.6 LTS and 4.x: socket lookup goes through an alias table (<code>Emission</code>→<code>Emission Color</code>, <code>Specular</code>→<code>Specular IOR Level</code>, …), importers fall back between <code>wm.obj_import</code> and legacy operators, and Eevee's renamed engine id is handled. Metallic and curvature are baked through the Emission channel (Cycles has no native pass for them); curvature uses the Geometry node's <em>Pointiness</em> output.</p>
+<details open><summary>pipeline.py <span class="file">visionforge/pipeline.py</span></summary>
+<div class="codewrap"><pre><code>"""VisionForge headless Blender pipeline. Runs INSIDE Blender (3.6 LTS and 4.x).
+Usage: blender -b --python pipeline.py -- --job job.json
+"""
+import bpy
+import bmesh
+import sys
+import os
+import json
+import math
+import time
+import subprocess
+from mathutils import Vector
+
+VERSION = bpy.app.version
+IS_4X = VERSION &gt;= (4, 0, 0)
+EEVEE_ID = "BLENDER_EEVEE_NEXT" if VERSION &gt;= (4, 2, 0) else "BLENDER_EEVEE"
+
+SOCKET_ALIASES = {
+    "Specular": ["Specular IOR Level", "Specular"],
+    "Subsurface": ["Subsurface Weight", "Subsurface"],
+    "Emission": ["Emission Color", "Emission"],
+    "Emission Strength": ["Emission Strength"],
+    "Transmission": ["Transmission Weight", "Transmission"],
+    "Clearcoat": ["Coat Weight", "Clearcoat"],
+    "Sheen": ["Sheen Weight", "Sheen"],
+    "Base Color": ["Base Color"],
+    "Metallic": ["Metallic"],
+    "Roughness": ["Roughness"],
+    "Normal": ["Normal"],
+    "Alpha": ["Alpha"],
+}
+
+
+def log(msg):
+    print(f"[VF {time.strftime('%H:%M:%S')}] {msg}", flush=True)
+
+
+def socket(node, name):
+    for alias in SOCKET_ALIASES.get(name, [name]):
+        if alias in node.inputs:
+            return node.inputs[alias]
+    raise KeyError(f"socket {name} not found on {node.bl_idname} (Blender {VERSION})")
+
+
+def parse_job():
+    argv = sys.argv
+    args = argv[argv.index("--") + 1:] if "--" in argv else []
+    job_path = None
+    for i, a in enumerate(args):
+        if a == "--job" and i + 1 &lt; len(args):
+            job_path = args[i + 1]
+    if not job_path or not os.path.exists(job_path):
+        raise SystemExit("usage: blender -b --python pipeline.py -- --job job.json")
+    with open(job_path, "r", encoding="utf-8") as f:
+        job = json.load(f)
+    job.setdefault("object_class", "object")
+    job.setdefault("target_faces", 12000)
+    job.setdefault("bake_resolution", 4096)
+    job.setdefault("bake_samples", 16)
+    job.setdefault("cage_extrusion", 0.02)
+    job.setdefault("max_ray_distance", 0.2)
+    job.setdefault("target_height_m", 1.0)
+    job.setdefault("rotate_z_deg", 0.0)
+    job.setdefault("use_mesh_symmetry", False)
+    job.setdefault("animation_candidate", False)
+    job.setdefault("keep_highpoly", False)
+    job.setdefault("maps", ["albedo", "normal", "roughness", "metallic", "curvature"])
+    job.setdefault("export_previews", True)
+    job["output_blend"] = os.path.abspath(job["output_blend"])
+    job["input_mesh"] = os.path.abspath(job["input_mesh"])
+    return job
+
+
+# --------------------------------------------------------------------------- #
+# Scene / import                                                              #
+# --------------------------------------------------------------------------- #
+def reset_scene():
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    scene = bpy.context.scene
+    scene.unit_settings.system = "METRIC"
+    scene.unit_settings.scale_length = 1.0
+    scene.unit_settings.length_unit = "METERS"
+    return scene
+
+
+def override(obj, extra=None):
+    ctx = {"object": obj, "active_object": obj, "selected_objects": [obj], "selected_editable_objects": [obj]}
+    if extra:
+        ctx.update(extra)
+    return bpy.context.temp_override(**ctx)
+
+
+def select_only(objs, active):
+    for o in bpy.context.view_layer.objects:
+        o.select_set(False)
+    for o in objs:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = active
+
+
+def import_mesh(path):
+    ext = os.path.splitext(path)[1].lower()
+    before = set(bpy.data.objects)
+    if ext in (".glb", ".gltf"):
+        bpy.ops.import_scene.gltf(filepath=path)
+    elif ext == ".obj":
+        if hasattr(bpy.ops.wm, "obj_import"):
+            bpy.ops.wm.obj_import(filepath=path)
+        else:
+            bpy.ops.import_scene.obj(filepath=path)
+    elif ext == ".ply":
+        if hasattr(bpy.ops.wm, "ply_import"):
+            bpy.ops.wm.ply_import(filepath=path)
+        else:
+            bpy.ops.import_mesh.ply(filepath=path)
+    elif ext == ".stl":
+        if hasattr(bpy.ops.wm, "stl_import"):
+            bpy.ops.wm.stl_import(filepath=path)
+        else:
+            bpy.ops.import_mesh.stl(filepath=path)
+    elif ext == ".fbx":
+        bpy.ops.import_scene.fbx(filepath=path)
+    else:
+        raise RuntimeError(f"unsupported mesh format: {ext}")
+    new = [o for o in bpy.data.objects if o not in before]
+    meshes = [o for o in new if o.type == "MESH"]
+    if not meshes:
+        raise RuntimeError("no mesh objects imported")
+    for o in new:
+        if o.type != "MESH":
+            bpy.data.objects.remove(o, do_unlink=True)
+    for o in meshes:
+        o.hide_set(False)
+        o.hide_viewport = False
+        o.hide_render = False
+    select_only(meshes, meshes[0])
+    with bpy.context.temp_override(active_object=meshes[0], selected_objects=meshes,
+                                   selected_editable_objects=meshes, object=meshes[0]):
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+        if len(meshes) &gt; 1:
+            bpy.ops.object.join()
+    obj = bpy.context.view_layer.objects.active
+    obj.name = "VF_Source"
+    obj.data.name = "VF_Source"
+    log(f"imported {path} -&gt; {len(obj.data.polygons)} faces")
+    return obj
+
+
+# --------------------------------------------------------------------------- #
+# World-space alignment                                                       #
+# --------------------------------------------------------------------------- #
+def world_bbox(obj):
+    pts = [obj.matrix_world @ Vector(c) for c in obj.bound_box]
+    mn = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
+    mx = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
+    return mn, mx
+
+
+def normalize_and_ground(obj, target_height_m, rotate_z_deg):
+    if rotate_z_deg:
+        obj.rotation_euler[2] += math.radians(rotate_z_deg)
+    mn, mx = world_bbox(obj)
+    height = max(mx.z - mn.z, 1e-6)
+    s = target_height_m / height
+    obj.scale = obj.scale * s
+    bpy.context.view_layer.update()
+    mn, mx = world_bbox(obj)
+    center = (mn + mx) * 0.5
+    obj.location -= Vector((center.x, center.y, mn.z))
+    bpy.context.view_layer.update()
+    select_only([obj], obj)
+    with override(obj):
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
+    with override(obj):
+        bpy.ops.object.origin_set(type="ORIGIN_CURSOR", center="MEDIAN")
+    mn, mx = world_bbox(obj)
+    dims = mx - mn
+    log(f"grounded: dims={tuple(round(v, 4) for v in dims)} origin={tuple(obj.location)} forward=-Y")
+    return {"dimensions_m": [round(dims.x, 5), round(dims.y, 5), round(dims.z, 5)], "origin": [0.0, 0.0, 0.0],
+            "forward_axis": "-Y", "up_axis": "+Z", "units": "meters"}
+
+
+# --------------------------------------------------------------------------- #
+# Remesh + topology checks                                                    #
+# --------------------------------------------------------------------------- #
+def make_clean_copy(obj, name):
+    dup = obj.copy()
+    dup.data = obj.data.copy()
+    dup.name = name
+    dup.data.name = name
+    bpy.context.scene.collection.objects.link(dup)
+    return dup
+
+
+def quadriflow(obj, target_faces, symmetry):
+    select_only([obj], obj)
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
+    bmesh.ops.triangulate(bm, faces=bm.faces)
+    bm.to_mesh(obj.data)
+    bm.free()
+    try:
+        with override(obj):
+            bpy.ops.object.quadriflow_remesh(use_mesh_symmetry=symmetry, use_preserve_sharp=False,
+                                             use_preserve_boundary=False, smooth_normals=True, mode="FACES",
+                                             target_faces=int(target_faces), seed=0)
+        log(f"quadriflow ok: {len(obj.data.polygons)} faces")
+        return "quadriflow"
+    except RuntimeError as exc:
+        log(f"quadriflow failed ({exc}); voxel pre-pass then retry")
+        mn, mx = world_bbox(obj)
+        obj.data.remesh_voxel_size = max((mx - mn).length / 250.0, 0.002)
+        obj.data.remesh_voxel_adaptivity = 0.0
+        with override(obj):
+            bpy.ops.object.voxel_remesh()
+            bpy.ops.object.quadriflow_remesh(use_mesh_symmetry=symmetry, use_preserve_sharp=False,
+                                             use_preserve_boundary=False, smooth_normals=True, mode="FACES",
+                                             target_faces=int(target_faces), seed=0)
+        log(f"quadriflow after voxel ok: {len(obj.data.polygons)} faces")
+        return "voxel+quadriflow"
+
+
+def topology_report(obj):
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    faces = len(bm.faces)
+    quads = sum(1 for f in bm.faces if len(f.verts) == 4)
+    tris = sum(1 for f in bm.faces if len(f.verts) == 3)
+    ngons = faces - quads - tris
+    non_manifold = sum(1 for e in bm.edges if not e.is_manifold)
+    boundary = sum(1 for e in bm.edges if e.is_boundary)
+    poles = sum(1 for v in bm.verts if len(v.link_edges) &gt; 5 or (len(v.link_edges) == 3 and not v.is_boundary))
+    verts = len(bm.verts)
+    # Edge-loop continuity: walk quad loops from random seeds and measure closed/terminated ratio
+    closed_loops = 0
+    sampled = 0
+    for e in list(bm.edges)[:: max(1, len(bm.edges) // 200)]:
+        if len(e.link_faces) != 2:
+            continue
+        sampled += 1
+        start = e
+        cur = e
+        prev_face = None
+        steps = 0
+        closed = False
+        while steps &lt; 4000:
+            faces_ = [f for f in cur.link_faces if f is not prev_face and len(f.verts) == 4]
+            if not faces_:
+                break
+            f = faces_[0]
+            opposite = [x for x in f.edges if not set(x.verts) &amp; set(cur.verts)]
+            if not opposite:
+                break
+            prev_face = f
+            cur = opposite[0]
+            steps += 1
+            if cur is start:
+                closed = True
+                break
+        if closed:
+            closed_loops += 1
+    bm.free()
+    quad_ratio = quads / faces if faces else 0.0
+    pole_ratio = poles / verts if verts else 1.0
+    loop_ratio = closed_loops / sampled if sampled else 0.0
+    ok = quad_ratio &gt;= 0.95 and non_manifold == 0 and pole_ratio &lt; 0.03
+    return {"faces": faces, "quads": quads, "tris": tris, "ngons": ngons, "verts": verts,
+            "quad_ratio": round(quad_ratio, 4), "non_manifold_edges": non_manifold, "boundary_edges": boundary,
+            "pole_ratio": round(pole_ratio, 4), "closed_loop_ratio": round(loop_ratio, 4),
+            "animation_topology_ok": bool(ok), "edge_loop_check_passed": bool(ok and loop_ratio &gt;= 0.5)}
+
+
+# --------------------------------------------------------------------------- #
+# UVs                                                                          #
+# --------------------------------------------------------------------------- #
+def unwrap(obj):
+    select_only([obj], obj)
+    if not obj.data.uv_layers:
+        obj.data.uv_layers.new(name="UVMap")
+    with override(obj):
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_all(action="SELECT")
+        bpy.ops.uv.smart_project(angle_limit=math.radians(66.0), island_margin=0.003, area_weight=0.0,
+                                 correct_aspect=True, scale_to_bounds=False)
+        try:
+            bpy.ops.uv.pack_islands(margin=0.003, rotate=True)
+        except TypeError:
+            bpy.ops.uv.pack_islands(margin=0.003)
+        bpy.ops.object.mode_set(mode="OBJECT")
+    log("uv unwrap done")
+
+
+# --------------------------------------------------------------------------- #
+# Cycles device                                                               #
+# --------------------------------------------------------------------------- #
+def setup_cycles(scene, samples):
+    scene.render.engine = "CYCLES"
+    scene.cycles.samples = int(samples)
+    scene.cycles.use_denoising = False
+    scene.render.bake.margin = 16
+    scene.render.bake.use_clear = True
+    prefs = bpy.context.preferences.addons.get("cycles")
+    device_used = "CPU"
+    if prefs:
+        cp = prefs.preferences
+        for dtype in ("OPTIX", "CUDA", "HIP", "METAL", "ONEAPI"):
+            try:
+                cp.compute_device_type = dtype
+                cp.get_devices()
+            except (TypeError, AttributeError):
+                continue
+            gpus = [d for d in cp.devices if d.type != "CPU"]
+            if gpus:
+                for d in cp.devices:
+                    d.use = True
+                scene.cycles.device = "GPU"
+                device_used = dtype
+                break
+    if device_used == "CPU":
+        scene.cycles.device = "CPU"
+    log(f"cycles device: {device_used}")
+    return device_used
+
+
+# --------------------------------------------------------------------------- #
+# Materials                                                                   #
+# --------------------------------------------------------------------------- #
+def ensure_source_materials(obj):
+    if not obj.data.materials or all(m is None for m in obj.data.materials):
+        mat = bpy.data.materials.new("VF_SourceMat")
+        mat.use_nodes = True
+        obj.data.materials.clear()
+        obj.data.materials.append(mat)
+    for mat in obj.data.materials:
+        if mat and not mat.use_nodes:
+            mat.use_nodes = True
+    # glTF imports with vertex colors but no texture: wire Color Attribute into Base Color
+    for mat in obj.data.materials:
+        if mat is None:
+            continue
+        nt = mat.node_tree
+        bsdf = next((n for n in nt.nodes if n.bl_idname == "ShaderNodeBsdfPrincipled"), None)
+        if bsdf is None:
+            continue
+        bc = socket(bsdf, "Base Color")
+        if not bc.is_linked and obj.data.color_attributes:
+            attr = nt.nodes.new("ShaderNodeVertexColor")
+            attr.layer_name = obj.data.color_attributes[0].name
+            nt.links.new(attr.outputs["Color"], bc)
+
+
+def principled_of(mat):
+    return next((n for n in mat.node_tree.nodes if n.bl_idname == "ShaderNodeBsdfPrincipled"), None)
+
+
+def new_bake_image(name, res, non_color):
+    img = bpy.data.images.new(name, width=res, height=res, alpha=False, float_buffer=False)
+    img.generated_color = (0.0, 0.0, 0.0, 1.0)
+    if non_color:
+        img.colorspace_settings.name = "Non-Color"
+    return img
+
+
+def set_active_bake_target(low, img):
+    mat = low.data.materials[0]
+    nt = mat.node_tree
+    for n in nt.nodes:
+        n.select = False
+    node = nt.nodes.new("ShaderNodeTexImage")
+    node.image = img
+    node.name = f"BAKE_{img.name}"
+    node.label = node.name
+    node.select = True
+    nt.nodes.active = node
+    return node
+
+
+def run_bake(high, low, bake_type, pass_filter=None, normal_space="TANGENT", cage=0.02, max_ray=0.2):
+    select_only([high, low], low)
+    kwargs = {"type": bake_type, "margin": 16, "use_clear": True, "use_selected_to_active": True,
+              "cage_extrusion": float(cage), "max_ray_distance": float(max_ray)}
+    if pass_filter:
+        kwargs["pass_filter"] = set(pass_filter)
+    if bake_type == "NORMAL":
+        kwargs["normal_space"] = normal_space
+    with bpy.context.temp_override(object=low, active_object=low, selected_objects=[high, low],
+                                   selected_editable_objects=[high, low]):
+        bpy.ops.object.bake(**kwargs)
+
+
+class EmissionSwap:
+    """Temporarily route a scalar Principled input (or a custom node output) to Emission for EMIT bakes."""
+
+    def __init__(self, obj):
+        self.obj = obj
+        self.saved = []
+        self.temp_nodes = []
+
+    def route_input(self, input_name):
+        for mat in self.obj.data.materials:
+            if mat is None:
+                continue
+            bsdf = principled_of(mat)
+            if bsdf is None:
+                continue
+            nt = mat.node_tree
+            src = socket(bsdf, input_name)
+            emis = socket(bsdf, "Emission")
+            strength = socket(bsdf, "Emission Strength")
+            self.saved.append((mat, [(l.from_socket, l.to_socket) for l in nt.links if l.to_socket in (emis, strength)],
+                               tuple(emis.default_value), float(strength.default_value)))
+            for l in [l for l in nt.links if l.to_socket in (emis, strength)]:
+                nt.links.remove(l)
+            if src.is_linked:
+                nt.links.new(src.links[0].from_socket, emis)
+            else:
+                v = float(src.default_value)
+                emis.default_value = (v, v, v, 1.0)
+            strength.default_value = 1.0
+
+    def route_curvature(self):
+        for mat in self.obj.data.materials:
+            if mat is None:
+                continue
+            bsdf = principled_of(mat)
+            if bsdf is None:
+                continue
+            nt = mat.node_tree
+            emis = socket(bsdf, "Emission")
+            strength = socket(bsdf, "Emission Strength")
+            self.saved.append((mat, [(l.from_socket, l.to_socket) for l in nt.links if l.to_socket in (emis, strength)],
+                               tuple(emis.default_value), float(strength.default_value)))
+            for l in [l for l in nt.links if l.to_socket in (emis, strength)]:
+                nt.links.remove(l)
+            geo = nt.nodes.new("ShaderNodeNewGeometry")
+            ramp = nt.nodes.new("ShaderNodeValToRGB")
+            ramp.color_ramp.elements[0].position = 0.42
+            ramp.color_ramp.elements[1].position = 0.58
+            nt.links.new(geo.outputs["Pointiness"], ramp.inputs["Fac"])
+            nt.links.new(ramp.outputs["Color"], emis)
+            strength.default_value = 1.0
+            self.temp_nodes.extend([(nt, geo), (nt, ramp)])
+
+    def restore(self):
+        for nt, node in self.temp_nodes:
+            nt.nodes.remove(node)
+        self.temp_nodes = []
+        for mat, links, emis_val, strength_val in self.saved:
+            bsdf = principled_of(mat)
+            nt = mat.node_tree
+            emis = socket(bsdf, "Emission")
+            strength = socket(bsdf, "Emission Strength")
+            for l in [l for l in nt.links if l.to_socket in (emis, strength)]:
+                nt.links.remove(l)
+            for from_s, to_s in links:
+                nt.links.new(from_s, to_s)
+            emis.default_value = emis_val
+            strength.default_value = strength_val
+        self.saved = []
+
+
+def bake_all(high, low, job, textures_dir):
+    res = int(job["bake_resolution"])
+    cage = float(job["cage_extrusion"])
+    max_ray = float(job["max_ray_distance"])
+    scene = bpy.context.scene
+    os.makedirs(textures_dir, exist_ok=True)
+    mat = bpy.data.materials.new("VF_Baked")
+    mat.use_nodes = True
+    low.data.materials.clear()
+    low.data.materials.append(mat)
+    nt = mat.node_tree
+    bsdf = principled_of(mat)
+    base = f"{job['object_class']}_{res}"
+    images = {}
+    nodes = {}
+
+    def do(map_name, image_non_color, bake_fn, samples):
+        scene.cycles.samples = samples
+        img = new_bake_image(f"{base}_{map_name}", res, image_non_color)
+        node = set_active_bake_target(low, img)
+        t0 = time.time()
+        bake_fn()
+        img.filepath_raw = os.path.join(textures_dir, f"{img.name}.png")
+        img.file_format = "PNG"
+        img.save()
+        img.pack()
+        images[map_name] = img
+        nodes[map_name] = node
+        log(f"baked {map_name} {res}x{res} in {time.time() - t0:.1f}s")
+
+    maps = job["maps"]
+    if "albedo" in maps:
+        do("albedo", False, lambda: run_bake(high, low, "DIFFUSE", {"COLOR"}, cage=cage, max_ray=max_ray), job["bake_samples"])
+    if "normal" in maps:
+        do("normal", True, lambda: run_bake(high, low, "NORMAL", normal_space="TANGENT", cage=cage, max_ray=max_ray), 1)
+    if "roughness" in maps:
+        do("roughness", True, lambda: run_bake(high, low, "ROUGHNESS", cage=cage, max_ray=max_ray), 1)
+    swap = EmissionSwap(high)
+    if "metallic" in maps:
+        swap.route_input("Metallic")
+        try:
+            do("metallic", True, l
