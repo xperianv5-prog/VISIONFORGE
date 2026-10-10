@@ -1,9 +1,8 @@
-visionforge/
-├── .gitignore
-├── README.md
-├── requirements.txt
-├── router.py
-├── memory.py
-├── pipeline.py
-├── server.py
-└── app.py
+__pycache__/
+*.pyc
+*.blend1
+visionforge_memory.db
+router_state.json
+jobs/
+.env
+venv/
